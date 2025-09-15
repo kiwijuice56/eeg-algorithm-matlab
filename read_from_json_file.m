@@ -29,6 +29,7 @@ function signals = read_from_json_file(filename)
 
         % Extract time (microseconds to seconds)
         t = double(entry.time(:)) / 1e6;
+        t = t - t(1); % Normalize to start at 0
 
         % Extract values (n × m numeric matrix)
         values = double(entry.value);
