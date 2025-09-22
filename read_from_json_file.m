@@ -1,6 +1,7 @@
 function signals = read_from_json_file(filename)
-    % LOAD_AND_RESAMPLE_JSON Loads and resamples JSON time series data 
-    % to 1000 Hz.
+    % READ_FROM_JSON_FILE Loads and resamples JSON time series data 
+    % to 256 Hz, aligning all signals on a common timeline with mean padding.
+    % Time is normalized so that all signals start at 0 seconds.
     %
     % Input:
     %   filename - string, path to .json file
@@ -10,46 +11,85 @@ function signals = read_from_json_file(filename)
     %             containing .time (resampled timeline) and .value (resampled values)
 
     % Read JSON file
-    rawText = fileread(filename);
-    data = jsondecode(rawText);
+    text = fileread(filename);
+    text = strrep(text, 'nan', 'null');
+    data = jsondecode(text);
 
     % Target sampling frequency
-    fs = 1000;
+    fs = 256;
 
-    % Loop through each top-level signal type
+    % --- First pass: gather all timestamps ---
+    allStartTimes = [];
+    allEndTimes   = [];
+
     signalNames = fieldnames(data);
     for i = 1:numel(signalNames)
         name = signalNames{i};
         entry = data.(name);
 
-        % Skip if missing or empty .value (artifact signals)
+        % Skip if missing or empty .value
         if ~isfield(entry, "value") || isempty(entry.value)
             continue;
         end
 
-        % Extract time (microseconds to seconds)
         t = double(entry.time(:)) / 1e6;
-        t = t - t(1); % Normalize to start at 0
+        t = sort(t);
 
-        % Extract values (n × m numeric matrix)
+        allStartTimes(end+1) = t(1);
+        allEndTimes(end+1)   = t(end);
+    end
+
+    % Define global time base (absolute)
+    tStartGlobal = min(allStartTimes);
+    tEndGlobal   = max(allEndTimes);
+    tResampAbs   = (tStartGlobal : 1/fs : tEndGlobal)';
+
+    % Normalize so time starts at 0
+    tResamp = tResampAbs - tStartGlobal;
+
+    % --- Second pass: resample onto global time base ---
+    for i = 1:numel(signalNames)
+        name = signalNames{i};
+        entry = data.(name);
+
+        if ~isfield(entry, "value") || isempty(entry.value)
+            continue;
+        end
+
+        % Extract and sort time/value
+        t = double(entry.time(:)) / 1e6;
         values = double(entry.value);
-
-        % Ensure timestamps are sorted
         [t, idx] = sort(t);
         values = values(idx, :);
 
-        % Create uniform time base
-        tStart = t(1);
-        tEnd = t(end);
-        tResamp = (tStart : 1/fs : tEnd)';
+        % Remove duplicate timestamps
+        [tUnique, ~, ic] = unique(t, 'stable');
+        if numel(tUnique) < numel(t)
+            % Average values across duplicates
+            valuesUnique = zeros(numel(tUnique), size(values,2));
+            for k = 1:numel(tUnique)
+                valuesUnique(k,:) = mean(values(ic==k,:), 1, 'omitnan');
+            end
+            t = tUnique;
+            values = valuesUnique;
+        end
 
-        % Resample each channel independently
-        vResamp = interp1(t, values, tResamp, 'linear', 'extrap');
+        % Compute mean of each channel
+        chanMeans = mean(values, 1, 'omitnan');
 
-        % Store each channel separately
+        % Resample with NaN padding first (absolute times)
+        vResamp = interp1(t, values, tResampAbs, 'linear', NaN);
+
+        % Replace NaNs (before start and after end) with mean
         for ch = 1:size(vResamp,2)
-            chanName = sprintf('%s%d', lower(name), ch-1);  % eeg0, eeg1, ...
-            signals.(chanName).time = tResamp;
+            nanIdx = isnan(vResamp(:,ch));
+            vResamp(nanIdx,ch) = chanMeans(ch);
+        end
+
+        % Store each channel (normalized time)
+        for ch = 1:size(vResamp,2)
+            chanName = sprintf('%s%d', lower(name), ch-1);
+            signals.(chanName).time  = tResamp;
             signals.(chanName).value = vResamp(:,ch);
         end
     end
