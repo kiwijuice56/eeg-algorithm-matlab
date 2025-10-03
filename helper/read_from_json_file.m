@@ -1,10 +1,11 @@
-function signals = read_from_json_file(filename)
+function signals = read_from_json_file(filename, resampling_rate)
     % READ_FROM_JSON_FILE Loads and resamples JSON time series data 
-    % to 256 Hz, aligning all signals on a common timeline with mean padding.
+    % to resampling_rate, aligning all signals on a common timeline with mean padding.
     % Time is normalized so that all signals start at 0 seconds.
     %
     % Input:
     %   filename - string, path to .json file
+    %   resampling_rate - the new sampling rate
     %
     % Output:
     %   signals - struct, each field is a channel (e.g., eeg0, eeg1, ...),
@@ -16,7 +17,7 @@ function signals = read_from_json_file(filename)
     data = jsondecode(text);
 
     % Target sampling frequency
-    fs = 256;
+    fs = resampling_rate;
 
     % --- First pass: gather all timestamps ---
     allStartTimes = [];
