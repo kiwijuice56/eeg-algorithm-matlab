@@ -1,37 +1,47 @@
-% Read data
-signals = read_from_json_file("data/eric_alfaro/eyes_open_3.json");
-signal_open = signals.notch_filtered_eeg1.value;
-
-signals = read_from_json_file("data/eric_alfaro/eyes_closed_3.json");
-signal_closed = signals.notch_filtered_eeg1.value;
-
 Fs = 256; 
 
-% Detrend and remove DC
-signal_open = detrend(signal_open);
-signal_open = highpass(signal_open, 1, Fs);
+figure; hold on;
 
-signal_closed = detrend(signal_closed);
-signal_closed = highpass(signal_closed, 1, Fs);
+trials = {'eyes_open_3', 'eyes_closed_3'};
+for trialnum = 1:length(trials) 
+    trial = trials{trialnum};
 
-N = length(signal_closed);          % Number of samples
-X = fft(signal_closed);             % Compute FFT
-X = X(1:floor(N/2));         % Keep only positive frequencies
-f = (0:floor(N/2)-1)*(Fs/N); % Frequency vector
+    % Read data
+    signals = read_from_json_file_raw(sprintf("data/eric_alfaro/%s.json", trial), "eeg");
+    
+    % Create EEG struct
+    EEG = eeg_emptyset;
+    EEG.data = [signals.eeg.data(1:4,:)];
+    EEG.nbchan = 4;
+    EEG.pnts = size(signals.eeg.time, 1);
+    EEG.trials = 1;
+    EEG.srate = 256;
+    EEG.times = signals.eeg.time;
+    EEG = eeg_checkset(EEG);
+    
+    % Rereference
+    EEG = pop_reref(EEG, []);
+    
+    channel = 1;
+    signal = EEG.data(channel, :);
+    
+    % Detrend and remove DC
+    signal = detrend(signal);
+    signal = highpass(signal, 1, Fs);
+    
+    N = length(signal);          % Number of samples
+    X = fft(signal);             % Compute FFT
+    X = X(1:floor(N/2));         % Keep only positive frequencies
+    f = (0:floor(N/2)-1)*(Fs/N); % Frequency vector
+    
+    % Plot magnitude
+    plot(f, abs(X), 'DisplayName', replace(trial, "_", " ")); 
+    
+end
 
-% Plot magnitude
-figure;
-plot(f, abs(X)); hold on
-
-N = length(signal_open);          
-X = fft(signal_open);            
-X = X(1:floor(N/2));        
-f = (0:floor(N/2)-1)*(Fs/N);
-
-plot(f, abs(X));
-
+title('EEG FFT');
+xlim([0 20]);
 xlabel('Frequency (Hz)');
 ylabel('Magnitude');
-title('EEG FFT (left forehead)');
-xlim([0 20]);
 grid on;
+legend;
