@@ -27,7 +27,7 @@ for trialnum = 1:length(trials)
 
         signal = EEG.data(channel, :);
     else 
-        signal= signals.eeg.data(channel, :);
+        signal = signals.eeg.data(channel, :);
     end
     
     N = length(signal);          % Number of samples

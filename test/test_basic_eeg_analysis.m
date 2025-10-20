@@ -1,6 +1,5 @@
 % Testing: Visualizing built-in scores
 
-
 % Read data
 signals = read_from_json_file_raw("data/eric_alfaro/eyes_open_then_closed_4.json", "alpha_absolute");
 

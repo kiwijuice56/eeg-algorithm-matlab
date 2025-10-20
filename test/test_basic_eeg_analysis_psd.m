@@ -30,7 +30,7 @@ for trialnum = 1:length(trials)
 
         signal = EEG.data(channel, :);
     else 
-        signal= signals.eeg.data(channel, :);
+        signal = signals.eeg.data(channel, :);
     end
 
     [pxx, f] = pwelch(signal, win, noverlap, nfft, Fs);
