@@ -1,5 +1,7 @@
 function signals = read_from_json_file(filename, resampling_rate)
-    % READ_FROM_JSON_FILE Loads and resamples JSON time series data 
+    % READ_FROM_JSON_FILE (DO NOT USE)
+    % 
+    % Loads and resamples JSON time series data 
     % to resampling_rate, aligning all signals on a common timeline with mean padding.
     % Time is normalized so that all signals start at 0 seconds.
     %

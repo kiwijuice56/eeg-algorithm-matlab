@@ -1,4 +1,8 @@
+% Testing: Visualizing alpha peak when eyes are closed
+
 Fs = 256; 
+channel = 1;
+rereference = false;
 
 figure; hold on;
 
@@ -9,25 +13,22 @@ for trialnum = 1:length(trials)
     % Read data
     signals = read_from_json_file_raw(sprintf("data/eric_alfaro/%s.json", trial), "eeg");
     
-    % Create EEG struct
-    EEG = eeg_emptyset;
-    EEG.data = [signals.eeg.data(1:4,:)];
-    EEG.nbchan = 4;
-    EEG.pnts = size(signals.eeg.time, 1);
-    EEG.trials = 1;
-    EEG.srate = 256;
-    EEG.times = signals.eeg.time;
-    EEG = eeg_checkset(EEG);
-    
-    % Rereference
-    EEG = pop_reref(EEG, []);
-    
-    channel = 1;
-    signal = EEG.data(channel, :);
-    
-    % Detrend and remove DC
-    signal = detrend(signal);
-    signal = highpass(signal, 1, Fs);
+    if (rereference) 
+        EEG = eeg_emptyset;
+        EEG.data = [signals.eeg.data(1:4,:)];
+        EEG.nbchan = 4;
+        EEG.pnts = size(signals.eeg.time, 1);
+        EEG.trials = 1;
+        EEG.srate = Fs;
+        EEG.times = (0:length(signals.eeg.time)-1) / Fs;
+        EEG = eeg_checkset(EEG);
+        
+        EEG = pop_reref(EEG, []);
+
+        signal = EEG.data(channel, :);
+    else 
+        signal= signals.eeg.data(channel, :);
+    end
     
     N = length(signal);          % Number of samples
     X = fft(signal);             % Compute FFT
@@ -36,7 +37,6 @@ for trialnum = 1:length(trials)
     
     % Plot magnitude
     plot(f, abs(X), 'DisplayName', replace(trial, "_", " ")); 
-    
 end
 
 title('EEG FFT');
