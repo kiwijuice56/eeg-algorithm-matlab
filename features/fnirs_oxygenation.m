@@ -1,5 +1,5 @@
 % Parameters
-fS = 10;               % Hz
+fS = 64;               % Hz
 baseline_seconds = 20; % baseline duration for initial intensity calculation
 d = 2.8;               % source-detector distance [cm] for outer sep
 DPF = [5.5, 5.5];      % differential pathlength factors (730 nm, 850nm)
@@ -8,23 +8,21 @@ epsilon = [400, 1500;  % 730 nm: [HbO, HbR], https://omlc.org/spectra/hemoglobin
 epsilon_uM = epsilon * 1e-6;
 
 % Load signals
-signals = read_from_json_file("data/eric_alfaro/breath_holding_6.json", fS);
-
-input_marker = signals.keyboard_input0.value;
+signals = read_from_json_file_raw("data/eric_alfaro/breath_holding_3.json", "optics");
 
 % Units are all in microamps;
 % Each signal is proportional to light intensity
-outer_left_730  = signals.optics0.value(:);
-outer_right_730 = signals.optics1.value(:);
-outer_left_850  = signals.optics2.value(:);
-outer_right_850 = signals.optics3.value(:);
+outer_left_730  = signals.optics.data(1,:)';
+outer_right_730 = signals.optics.data(2,:)';
+outer_left_850  = signals.optics.data(3,:)';
+outer_right_850 = signals.optics.data(4,:)';
 
-inner_left_730  = signals.optics4.value(:);
-inner_right_730 = signals.optics5.value(:); 
-inner_left_850  = signals.optics6.value(:);
-inner_right_850 = signals.optics7.value(:); 
+inner_left_730  = signals.optics.data(5,:)';
+inner_right_730 = signals.optics.data(6,:)';
+inner_left_850  = signals.optics.data(7,:)';
+inner_right_850 = signals.optics.data(8,:)';
 
-t = (0:length(outer_left_730)-1) / fS;
+t = (0:length(outer_left_730) - 1) / fS;
 
 % Convert intensity to optical density (OD) using baseline average
 baseline_samples = round(baseline_seconds * fS);
@@ -36,7 +34,6 @@ proc_channel = @(sig730, sig850) ...
 
 OD_left  = proc_channel(outer_left_730,  outer_left_850);
 OD_right = proc_channel(outer_right_730, outer_right_850);
-
 
 % Convert OD to delta OD
 deltaOD_left = OD_left - mean(OD_left(1:baseline_samples));
@@ -70,9 +67,8 @@ legend('HbO_2','HbR');
 title('Outer Right');
 
 subplot(3,1,3);
-plot((0:length(input_marker)-1) / fS, input_marker, 'g');
-xlabel('Time (s)');
-ylabel('Trigger');
-title('Input Trigger');
-
+markers = read_from_json_file_raw("data/eric_alfaro/breath_holding_5.json", "keyboard_input");
+marker_signal = markers.keyboard_input.data';
+t = (0:length(marker_signal) - 1) / length(marker_signal) * t(end);
+plot(t, marker_signal);
 
