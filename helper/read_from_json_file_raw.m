@@ -1,15 +1,13 @@
 function signals = read_from_json_file_raw(filename, type)
-    % READ_FROM_JSON_FILE Loads and resamples JSON time series data 
-    % to resampling_rate, aligning all signals on a common timeline with mean padding.
-    % Time is normalized so that all signals start at 0 seconds.
+    % READ_FROM_JSON_FILE Loads JSON time series data.
     %
     % Input:
     %   filename - string, path to .json file
-    %   type - string, the prefix of the stream type (optics, eeg, etc.)
+    %   type     - string, the prefix of the stream type (optics, eeg, etc.)
     %
     % Output:
     %   signals - struct, each field is a channel (e.g., eeg0, eeg1, ...),
-    %             containing .time (resampled timeline) and .value (resampled values)
+    %             containing .time (nx1) and .data (nx1)
 
     % Read JSON file
     text = fileread(filename);
@@ -27,13 +25,13 @@ function signals = read_from_json_file_raw(filename, type)
         end
 
         % Extract and sort time/value
-        t = double(entry.time(:)) / 1000;
+        % t = double(entry.time(:)) / 1000;
         values = double(entry.value);
-        [t, idx] = sort(t);
-        values = values(idx, :);
+        % [t, idx] = sort(t);
+        % values = values(idx, :);
 
         % Store each channel
         signals.(name).time = t;
         signals.(name).data = values';
-end
+    end
 end

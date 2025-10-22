@@ -11,21 +11,21 @@ EEG.nbchan = 4;
 EEG.pnts = length(signals.eeg.time);
 EEG.trials = 1;
 EEG.srate = 256;
-EEG.times = (0:length(signals.eeg.time)-1) / Fs;
+EEG.times = signals.eeg.time; % (0:length(signals.eeg.time)-1) / Fs;
 EEG = eeg_checkset(EEG);
 
-EEG = pop_reref(EEG, []);
+% EEG = pop_reref(EEG, []);
 
 % Prepare figure
 figure; hold on;
 
 % Plot signals
-n = 600;
-plot(EEG.times(1:n), EEG.data(2, 1:n), 'LineWidth', 1);
+n = Fs;
+plot((EEG.times(1:n) - EEG.times(1)) / 1e3, EEG.data(2, 1:n), 'LineWidth', 1);
 
 % Finalize plot
 xlabel('Time (s)');
 ylabel('Amplitude');
-title('Basic EEG Plotting');
+title('Basic EEG Plotting: Muse timestamps');
 grid on;
 hold off;
