@@ -1,30 +1,37 @@
-trials = read_from_json_file_raw_trial("data/erp/6f6643a9-0c90-4872-b243-67d125666784.json");
+trials = read_from_json_file_raw_trial("data/erp/f38cedd5-55e8-4e0e-be2c-9aae00ff69a6.json");
 
-% Prepare figure
-figure; hold on;
-
-% Plot signals
 Fs = 256;
 channel = 2;
+highpassFrequency = 1;
+lowpassFrequency = 30;
 
-averageEeg = trials.related{1}.eeg(:,channel);
-for i = 2:length(trials.related)
-    % Sum the EEG data to the average, taking the length of the smaller array
-    a = averageEeg;
-    b = trials.related{i}.eeg(:,channel);
+plottedTrials = [trials.related, trials.unrelated];
+
+figure; hold on;
+
+for j = 1:length(plottedTrials)
+    trial = plottedTrials(j);
+    averageEeg = lowpass(highpass(trial{1}.eeg(:,channel), highpassFrequency, Fs), lowpassFrequency, Fs);
+    for i = 2:length(trial)
+        a = averageEeg;
+        b = lowpass(highpass(trial{i}.eeg(:,channel), highpassFrequency, Fs), lowpassFrequency, Fs);
+        
+        minLength = min(length(a), length(b));
+        a = a(1:minLength);
+        b = b(1:minLength);
+        
+        averageEeg = a + b;
+    end
     
-    minLength = min(length(a), length(b));
-    a = a(1:minLength);
-    b = b(1:minLength);
-    
-    averageEeg = a + b;
+    eeg = -averageEeg / length(trial);
+    plot((1 : length(eeg)) / Fs, eeg);
 end
-eeg = averageEeg / length(trials.related);
 
-plot(eeg);
-
-% Finalize plot
+xline(1.0,'-w',{'Stimulus'}); % Hardcoded, stimulus was presented at t = 1.0
+xline(1.1,'--r',{'N1'}); 
+xline(1.2,'--g',{'P2'}); 
+xline(1.4,'--r',{'N400'}); 
+legend('Related', 'Unrelated')
 xlabel('Time (s)');
-ylabel('Amplitude');
-title('Basic EEG Plotting: From app');
-grid on;
+ylabel('Amplitude (microvolts)');
+title('ERP of word pair task (AF7)');
