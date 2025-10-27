@@ -19,18 +19,9 @@ end
 
 Fs = 256;
 
-% Create EEGLab struct
-EEG = eeg_emptyset;
-EEG.data = [eeg_struct.eeg.data(1:4,:)];
-EEG.nbchan = 4;
-EEG.pnts = length(eeg_struct.eeg.time);
-EEG.trials = 1;
-EEG.srate = Fs;
-EEG.times = (0 : length(signals.eeg.time) - 1) / Fs;
-EEG = eeg_checkset(EEG);
 
-% Rereference
-EEG = pop_reref(EEG, []);
 
+% TODO: finish this
+processed_eeg_struct = eeg_struct;
 
 end
