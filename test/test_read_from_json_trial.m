@@ -2,24 +2,24 @@ trials = read_from_json_file_raw_trial("data/erp/f38cedd5-55e8-4e0e-be2c-9aae00f
 
 Fs = 256;
 channel = 2;
-highpassFrequency = 0.5;
-lowpassFrequency = 50;
+[b,a] = butter(4, [2 30] / (Fs/2), 'bandpass');
 
 plottedTrials = {trials.related, trials.unrelated};
 figure; hold on;
 
+
 for j = 1:length(plottedTrials)
     trial = plottedTrials{j};
-    averageEeg = lowpass(highpass(trial{1}.eeg(:,channel), highpassFrequency, Fs), lowpassFrequency, Fs);
+    
+    averageEeg = filtfilt(b, a, detrend(trial{1}.eeg(:,channel)));
     for i = 2:length(trial)
-        a = averageEeg;
-        b = lowpass(highpass(trial{i}.eeg(:,channel), highpassFrequency, Fs), lowpassFrequency, Fs);
+        trialEeg = filtfilt(b, a, detrend(trial{i}.eeg(:,channel)));
         
-        minLength = min(length(a), length(b));
-        a = a(1:minLength);
-        b = b(1:minLength);
+        minLength = min(length(averageEeg), length(trialEeg));
+        trimmedAverageEeg = averageEeg(1:minLength);
+        trialEeg = trialEeg(1:minLength);
         
-        averageEeg = a + b;
+        averageEeg = trimmedAverageEeg + trialEeg;
     end
     
     eeg = averageEeg / length(trial);
