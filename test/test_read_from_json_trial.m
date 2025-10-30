@@ -1,7 +1,7 @@
 trials = read_from_json_file_raw_trial("data/erp/f38cedd5-55e8-4e0e-be2c-9aae00ff69a6.json");
 
 Fs = 256;
-channel = 2;
+channel = 3;
 [b,a] = butter(4, [2 30] / (Fs/2), 'bandpass');
 
 plottedTrials = {trials.related, trials.unrelated};

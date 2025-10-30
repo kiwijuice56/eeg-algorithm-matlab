@@ -19,8 +19,6 @@ end
 
 Fs = 256;
 
-
-
 % TODO: finish this
 processed_eeg_struct = eeg_struct;
 
