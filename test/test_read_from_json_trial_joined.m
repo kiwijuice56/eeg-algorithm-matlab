@@ -1,23 +1,25 @@
-data = read_from_json_file_raw_trial_joined("data/erp/4792c1b0-41d7-4363-ad00-69aa704e5b18.json");
+data = read_from_json_file_raw_trial_joined("data/erp/837c65a8-4c95-421a-a70e-3d73e9ee62c5.json");
 
-channel = 3;
+channel = 3; % Left forehead
 Fs = 256;
-trialLength = 0.5 + 3.0;
+trialLength = 0.5 + 2.8 + 0.6;
 trialSampleCount = round(trialLength * Fs);
 
-[b,a] = butter(2, [2 30] / (Fs/2), 'bandpass');
-eeg = filtfilt(b, a, detrend(data.eeg.values(:, channel)));
+[b_bp, a_bp] = butter(3, [0.5 5] / (Fs/2), 'bandpass');
+eeg = filtfilt(b_bp, a_bp, data.notch_filtered_eeg.values(:, channel));
 
 averagedEeg = {[], []};
 averagedEegCount = {0, 0};
 
 figure; hold on;
 
-for j = 1:length(data.trial_labels)
+% Skip some trials to avoid filtering issues
+skip = 3;
+for j = (skip + 1):length(data.trial_labels) - skip
     window = eeg(1 + trialSampleCount * (j - 1) : min(end, trialSampleCount * j));
-
-    length(window)
-
+    baseline = mean(window(1:round(0.2 * Fs))); % first 400 ms pre-stimulus
+    window = window - baseline;
+    
     label = data.trial_labels(j);
     if startsWith(label, "trial_related")
         trialIndex = 1;
@@ -34,23 +36,22 @@ for j = 1:length(data.trial_labels)
         trimmedWindow = window(1:minLength);
      
         averagedEeg{trialIndex} = trimmedAverageEeg + trimmedWindow;
-        averagedEegCount{trialIndex} = averagedEegCount{trialIndex} + 1;
     end
+
+    averagedEegCount{trialIndex} = averagedEegCount{trialIndex} + 1;
 end
 
 for i = 1:2
     averagedEeg{i} = averagedEeg{i} / averagedEegCount{i};
-    plot((1 : length(averagedEeg{i})) / Fs, averagedEeg{i}, 'LineWidth', 1.5);
+    plot((1 : length(averagedEeg{i})) / Fs, averagedEeg{i}, 'LineWidth', 1);
 end
 
 
 set(gca, 'YDir','reverse')
 xline(0.5,'-k',{'Stimulus start'}); 
+xline(2.0,'-k',{'Approximate determining word point'});
 xline(3.5,'-k',{'Stimulus end'});
 
-%xline(1.1,'--r',{'N1'}); 
-%xline(1.2,'--g',{'P2'}); 
-%xline(1.4,'--r',{'N400'}); 
 legend('Normal', 'Strange')
 xlabel('Time (s)');
 ylabel('Amplitude (microvolts)');
