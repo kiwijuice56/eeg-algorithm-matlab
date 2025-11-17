@@ -7,7 +7,7 @@
 
 % Note: this code uses butter filters instead of elliptic 
 
-[signal, fs] = audioread('data/audio/OSR_us_000_0010_8k.wav');
+[signal, fs] = audioread('data/audio/harvard.wav');
 signal = mean(signal, 2);   % convert to mono if stereo
 
 % Normalize volume
@@ -21,7 +21,7 @@ fRange = [180 8000]; % Hz
 envLowpass = 160;    % Hz (for envelope smoothing)
 
 % 0.0 = 0% understandable, 0.149 = 25%, 0.212 = 50%, 0.292 = 75%, 1.0 = 100%
-expFactor = 0.292;   
+expFactor = 1.0;   
 
 % Make logarithmically spaced frequency bands (approx Greenwood spacing)
 edges = logspace(log10(fRange(1)), log10(fRange(2)), nBands+1);
@@ -61,4 +61,4 @@ end
 vocoded = vocoded / max(abs(vocoded));
 vocoded = real(vocoded);
 % sound(vocoded, fs)
-audiowrite('output.wav', vocoded, fs);
+audiowrite('output_100.wav', vocoded, fs);

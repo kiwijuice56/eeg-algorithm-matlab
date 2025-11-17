@@ -2,11 +2,10 @@ trials = read_from_json_file_raw_trial("data/erp/f38cedd5-55e8-4e0e-be2c-9aae00f
 
 Fs = 256;
 channel = 3;
-[b,a] = butter(4, [2 30] / (Fs/2), 'bandpass');
+[b,a] = butter(2, [2 30] / (Fs/2), 'bandpass');
 
 plottedTrials = {trials.related, trials.unrelated};
 figure; hold on;
-
 
 for j = 1:length(plottedTrials)
     trial = plottedTrials{j};
@@ -23,11 +22,11 @@ for j = 1:length(plottedTrials)
     end
     
     eeg = averageEeg / length(trial);
-    plot((1 : length(eeg)) / Fs, eeg);
+    plot((1 : length(eeg)) / Fs, eeg, 'LineWidth', 1.5);
 end
 
 set(gca, 'YDir','reverse')
-xline(1.0,'-w',{'Stimulus'}); % Hardcoded, stimulus was presented at t = 1.0
+xline(1.0,'-k',{'Stimulus'}); % Hardcoded, stimulus was presented at t = 1.0
 xline(1.1,'--r',{'N1'}); 
 xline(1.2,'--g',{'P2'}); 
 xline(1.4,'--r',{'N400'}); 
