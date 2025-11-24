@@ -17,6 +17,8 @@ function [output] = read_from_json_file_raw_trial_joined(filename)
 
     output = struct();
     output.trial_labels = data.trial_label;
+    output.stimulus_times = data.stimulus_times;
+    output.start_times = data.start_times;
 
     % Process data
     for i = 1:numel(fieldNames)
@@ -24,7 +26,7 @@ function [output] = read_from_json_file_raw_trial_joined(filename)
         entry = data.(name);
 
         % Skip metadata
-        if strcmp(name, "metadata") || strcmp(name, "trial_count") || strcmp(name, "trial_label") 
+        if strcmp(name, "metadata") || strcmp(name, "trial_count") || strcmp(name, "trial_label") || strcmp(name, "stimulus_times") || strcmp(name, "start_times") 
             continue;
         end
 

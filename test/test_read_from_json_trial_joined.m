@@ -1,11 +1,11 @@
-data = read_from_json_file_raw_trial_joined("data/erp/837c65a8-4c95-421a-a70e-3d73e9ee62c5.json");
+data = read_from_json_file_raw_trial_joined("data/erp/f34273d4-a8df-4087-9ad2-1e544b652a2c.json");
 
-channel = 3; % Left forehead
+channel = 2; % Left forehead
 Fs = 256;
-trialLength = 0.5 + 2.8 + 0.6;
+trialLength = 0.5 + 1.0;
 trialSampleCount = round(trialLength * Fs);
 
-[b_bp, a_bp] = butter(3, [0.5 5] / (Fs/2), 'bandpass');
+[b_bp, a_bp] = butter(3, [0.5 30] / (Fs/2), 'bandpass');
 eeg = filtfilt(b_bp, a_bp, data.notch_filtered_eeg.values(:, channel));
 
 averagedEeg = {[], []};
@@ -13,10 +13,14 @@ averagedEegCount = {0, 0};
 
 figure; hold on;
 
+
 % Skip some trials to avoid filtering issues
 skip = 3;
 for j = (skip + 1):length(data.trial_labels) - skip
-    window = eeg(1 + trialSampleCount * (j - 1) : min(end, trialSampleCount * j));
+    startTime = data.start_times(j) - data.start_times(1);
+    startTimestamp = 1 + round(startTime * Fs);
+
+    window = eeg(startTimestamp : min(end, startTimestamp + trialSampleCount));
     baseline = mean(window(1:round(0.2 * Fs))); % first 400 ms pre-stimulus
     window = window - baseline;
     
@@ -48,9 +52,7 @@ end
 
 
 set(gca, 'YDir','reverse')
-xline(0.5,'-k',{'Stimulus start'}); 
-xline(2.0,'-k',{'Approximate determining word point'});
-xline(3.5,'-k',{'Stimulus end'});
+xline(0.5,'-k',{'Stimulus start (approx.)'}); 
 
 legend('Normal', 'Strange')
 xlabel('Time (s)');
