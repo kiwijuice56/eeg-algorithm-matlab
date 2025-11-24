@@ -57,7 +57,9 @@ end
 
 
 set(gca, 'YDir','reverse')
-xline(0.5,'-k',{'Stimulus start (approx.)'}); 
+xline(0.5,'-k',{'Stimulus start'}); 
+xline(0.6,'-b',{'P1'}); 
+xline(0.7,'-b',{'P2'}); 
 
 legend('Normal', 'Strange')
 xlabel('Time (s)');
