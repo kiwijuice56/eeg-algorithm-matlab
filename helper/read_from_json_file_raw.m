@@ -25,8 +25,8 @@ function signals = read_from_json_file_raw(filename, type)
         end
 
         % Extract and sort time/value
-        % t = double(entry.time(:)) / 1000;
         values = double(entry.value);
+        t = double(entry.time);
         % [t, idx] = sort(t);
         % values = values(idx, :);
 
