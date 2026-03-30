@@ -5,9 +5,7 @@ Fs = 256;
 channel = 1;
 trial = "data\app_sample\40232b95-d742-40c8-acb0-32370e45662c.json";
 
-signals = read_from_json_file_app(trial, "oddball", "eeg");
-signals = read_from_json_file_app(trial, "oddball", "eeg");
-
+signals = read_from_json_file_app(trial, "assr_listening", "eeg");
 signal = signals.eeg.data(channel, :);
 % signal = signal(length(signal) / 2 : length(signal)); % hacky way to split up the ASSR
 signal = detrend(signal); 
