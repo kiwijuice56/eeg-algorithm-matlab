@@ -2,13 +2,14 @@
 figure; hold on;
 
 Fs = 256; 
+time = 60;
 channel = 1;
 trial = "data\app_sample\40232b95-d742-40c8-acb0-32370e45662c.json";
 
 signals = read_from_json_file_app(trial, "assr_listening", "eeg");
 signal = signals.eeg.data(channel, :);
 % signal = signal(length(signal) / 2 : length(signal)); % hacky way to split up the ASSR
-signal = detrend(signal); 
+signal = signal(1:Fs * time);
 
 % FFT and PSD params
 win = hanning(1024);
@@ -29,8 +30,8 @@ f = (0:floor(N/2)-1)*(Fs/N); % Frequency vector
 % plot(f, abs(X));
 
 title('Frequency domain plot (PSD, left ear, 60 seconds)');
-xlim([3 80]);
-ylim([-20 20]);
+xlim([0 80]);
+%ylim([-20 20]);
 
 xlabel('Frequency (Hz)');
 ylabel('Power/Frequency (dB/Hz)');
