@@ -20,8 +20,13 @@ function signals = read_from_json_file_app(filename, task, type)
     for i = 1:numel(signalNames)
         name = signalNames{i};
         entry = data.(name);
+
+        if ~startsWith(name, type)
+            continue;
+        end
         
-        if ~isfield(entry, "value") || isempty(entry.value) || ~startsWith(name, type)
+        if ~isfield(entry, "value") || isempty(entry.value)
+            signals.(name) = entry;
             continue;
         end
 
