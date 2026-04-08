@@ -39,7 +39,6 @@ else
     sig = eeg_signal;
 end
 
-
 % plot EEG signal
 plot(t, sig, 'Color', [0.35 0.7 0.9]);
 xlabel('Unix Time (s)');
@@ -62,3 +61,4 @@ end
 
 % ensure axes limits unchanged except y as set
 xlim(xlims);
+
