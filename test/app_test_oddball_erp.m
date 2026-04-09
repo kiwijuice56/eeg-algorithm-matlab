@@ -1,7 +1,7 @@
 % ERP Analysis of Oddball Task
 Fs = 256;
 channel = 1;
-trial = "data\app_sample\eric_2.json";
+trial = "data\app_sample\fletcher_1.json";
 
 % epoch parameters 
 pre_stim_ms  = 200;
@@ -16,6 +16,8 @@ t_epoch = linspace(-pre_stim_ms, post_stim_ms, epoch_samples);
 % load data 
 eeg_data = read_from_json_file_app(trial, "oddball", "notch_filtered_eeg");
 eeg_signal = eeg_data.notch_filtered_eeg.data(channel, :);
+
+size(eeg_signal)
 
 stimulus_data = read_from_json_file_app(trial, "oddball", "stimulus");
 stimulus_times  = stimulus_data.stimulus_unix_time;
