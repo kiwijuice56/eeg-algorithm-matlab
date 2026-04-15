@@ -1,7 +1,7 @@
 % ERP Analysis of Oddball Task
 Fs = 256;
 channel = 1;
-trial = "data\app_sample\fletcher_1.json";
+trial = "data\app_sample\preset_1022.json";
 
 % epoch parameters 
 pre_stim_ms  = 200;
@@ -72,6 +72,7 @@ plot(t_epoch, rare_erp,   'Color', [0.5 0 0.5], 'LineWidth', 2, 'DisplayName', s
 xline(0, 'k--', 'Stimulus Onset', 'LineWidth', 1.2);
 xlabel('Time (ms)');
 ylabel('EEG Amplitude (baseline corrected)');
-title('Oddball ERP (Eric, left ear)');
+ylim([-8, 8]);
+title('Oddball ERP (preset 1022)');
 legend('Location', 'best');
 grid on;

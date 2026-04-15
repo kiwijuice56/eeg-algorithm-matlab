@@ -1,73 +1,76 @@
 Fs = 256;
 channel = 4;
-trial = "data\app_sample\eric_3.json";
-
-% Load EEG
-eeg_data   = read_from_json_file_app(trial, "assr_listening", "eeg");
-eeg_signal = eeg_data.eeg.data(channel, :);
-
-% Load timestamps
-stimulus_data   = read_from_json_file_app(trial, "assr_listening", "stimulus");
-stimulus_times  = stimulus_data.stimulus_unix_time;  % [high_start, rest_start, low_start]
-task_data       = read_from_json_file_app(trial, "assr_listening", "task");
-task_start_time = task_data.task_start_unix_time;
-task_end_time   = task_data.task_end_unix_time;
-
-% Convert unix timestamps to sample indices
-% eeg_signal is evenly sampled over [task_start_time, task_end_time]
-total_samples = length(eeg_signal);
-total_duration = task_end_time - task_start_time;  % seconds
-
-unix_to_sample = @(t) round((t - task_start_time) / total_duration * total_samples);
-
-% stimulus_times(1) = 40_hz_high start (ignore, assume instantaneous)
-% stimulus_times(2) = rest start      -> end of high condition
-% stimulus_times(3) = 40_hz_low start -> end of rest, start of low condition
-rest_start_sample = unix_to_sample(stimulus_times(2));
-low_start_sample  = unix_to_sample(stimulus_times(3));
-
-sig_high = eeg_signal(1               : rest_start_sample - 1);
-sig_low  = eeg_signal(low_start_sample : end);
-
-fprintf('High condition: %.1f s\n', length(sig_high) / Fs);
-fprintf('Low condition:  %.1f s\n', length(sig_low)  / Fs);
-
-% Welch PSD
+trial_file = "data\app_sample\preset_1022.json";
+% Load Data
+eeg_data       = read_from_json_file_app(trial_file, "assr_listening", "eeg");
+eeg_signal     = eeg_data.eeg.data(channel, :);
+stimulus_data  = read_from_json_file_app(trial_file, "assr_listening", "stimulus");
+task_data      = read_from_json_file_app(trial_file, "assr_listening", "task");
+% Extract Timestamps and Labels
+stim_times  = stimulus_data.stimulus_unix_time;
+stim_labels = stimulus_data.stimulus_label;
+task_start  = task_data.task_start_unix_time;
+task_end    = task_data.task_end_unix_time;
+% Time-to-Sample Mapping
+total_samples  = length(eeg_signal);
+total_duration = task_end - task_start;
+unix_to_sample = @(t) round((t - task_start) / total_duration * total_samples);
+% Processing Setup
+num_markers = length(stim_times);
 win      = hanning(2048);
 noverlap = 1024;
 nfft     = 4096;
-[pxx_high, f] = pwelch(sig_high, win, noverlap, nfft, Fs);
-[pxx_low,  ~] = pwelch(sig_low,  win, noverlap, nfft, Fs);
 
-delta_db = pow2db(pxx_high) - pow2db(pxx_low);
+figure('Name', 'ASSR Grid Results (preset 1022)');
+fprintf('Processing trials...\n');
 
-figure;
-
-% high volume
-subplot(3,1,1); hold on;
-plot(f, pow2db(pxx_high), 'b', 'LineWidth', 1.2, 'DisplayName', 'High volume');
-xline(40, '--r', '40 Hz', 'LabelVerticalAlignment', 'bottom', 'LineWidth', 1.5);
-xlim([15, 45]); grid on; legend;
-ylabel('Power/Frequency (dB/Hz)');
-title('40 Hz ASSR high volume');
-legend('off');
-
-% low volume
-subplot(3,1,2); hold on;
-plot(f, pow2db(pxx_low), 'm', 'LineWidth', 1.2, 'DisplayName', 'Low volume');
-xline(40, '--r', '40 Hz', 'LabelVerticalAlignment', 'bottom', 'LineWidth', 1.5);
-xlim([15 45]); grid on; legend;
-ylabel('Power/Frequency (dB/Hz)');
-title('40 Hz ASSR low volume');
-legend('off');
-
-% delta
-subplot(3,1,3); hold on;
-plot(f, delta_db, 'k', 'LineWidth', 1.2, 'DisplayName', 'High - Low (dB)');
-xline(40, '--r', '40 Hz', 'LabelVerticalAlignment', 'bottom', 'LineWidth', 1.5);
-yline(0, '--', 'Color', [0.5 0.5 0.5]);
-xlim([15 45]); grid on; legend;
-xlabel('Frequency (Hz)');
-ylabel('Power difference (dB)');
-title('40 Hz ASSR delta (high - low)');
-legend('off');
+for i = 1:num_markers
+    current_label = stim_labels{i};
+    
+    if contains(current_label, 'rest', 'IgnoreCase', true)
+        continue;
+    end
+    
+    % Determine grid position
+    if contains(current_label, '40_hz_high'), sp_idx = 1;
+    elseif contains(current_label, '40_hz_low'),  sp_idx = 3;
+    elseif contains(current_label, '25_hz_high'), sp_idx = 2;
+    elseif contains(current_label, '25_hz_low'),  sp_idx = 4;
+    else, continue;
+    end
+    
+    start_idx = unix_to_sample(stim_times(i));
+    if i < num_markers
+        end_idx = unix_to_sample(stim_times(i+1)) - 1;
+    else
+        end_idx = total_samples;
+    end
+    
+    segment = eeg_signal(max(1, start_idx):min(end_idx, total_samples));
+    
+    if contains(current_label, '40')
+        target_freq = 40;
+    elseif contains(current_label, '25')
+        target_freq = 25;
+    else
+        target_freq = 40;
+    end
+    
+    [pxx, f] = pwelch(segment, win, noverlap, nfft, Fs);
+    
+    subplot(2, 2, sp_idx);
+    hold on;
+    % xline(target_freq, '--r', sprintf('%d Hz', target_freq), ...
+    %     'LabelVerticalAlignment', 'bottom', 'LineWidth', 1.5);
+    plot(f, pow2db(pxx), 'LineWidth', 1.2);
+    
+    
+    xlim([3, 50]);
+    ylim([-10, 15]);
+    grid on;
+    if sp_idx > 2, xlabel('Frequency (Hz)'); end
+    if mod(sp_idx, 2) ~= 0, ylabel('Power/Frequency (dB/Hz)'); end
+    title(strrep(current_label, '_', ' '));
+    
+    fprintf('Processed %s: %.1f s\n', current_label, length(segment) / Fs);
+end
