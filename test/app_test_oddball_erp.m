@@ -1,7 +1,7 @@
 % ERP Analysis of Oddball Task
 Fs = 256;
 channel = 1;
-trial = "data\app_sample\preset_1022.json";
+trial = "data\app_sample\preset_1032n.json";
 
 % epoch parameters 
 pre_stim_ms  = 200;
@@ -73,6 +73,6 @@ xline(0, 'k--', 'Stimulus Onset', 'LineWidth', 1.2);
 xlabel('Time (ms)');
 ylabel('EEG Amplitude (baseline corrected)');
 ylim([-8, 8]);
-title('Oddball ERP (preset 1022)');
+title('Oddball ERP (preset 1032)');
 legend('Location', 'best');
 grid on;

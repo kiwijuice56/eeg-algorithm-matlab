@@ -1,6 +1,6 @@
 Fs = 256;
 channel = 1;
-trial = "data\app_sample\preset_1042.json";
+trial = "data\app_sample\preset_1032n.json";
 signals = read_from_json_file_app(trial, "no_stimulus", "eeg");
 signal = signals.eeg.data(channel, :);
 
@@ -32,4 +32,4 @@ ylim([-10, 15]);
 grid on; legend;
 xlabel('Frequency (Hz)');
 ylabel('Power/Frequency (dB/Hz)');
-title('Resting state PSD (Preset 1042)');
+title('Resting state PSD (Preset 1032)');

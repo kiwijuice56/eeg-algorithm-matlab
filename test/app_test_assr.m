@@ -1,6 +1,6 @@
 Fs = 256;
-channel = 4;
-trial_file = "data\app_sample\preset_1022.json";
+channel = 2;
+trial_file = "data\app_sample\preset_1042.json";
 % Load Data
 eeg_data       = read_from_json_file_app(trial_file, "assr_listening", "eeg");
 eeg_signal     = eeg_data.eeg.data(channel, :);
@@ -21,7 +21,7 @@ win      = hanning(2048);
 noverlap = 1024;
 nfft     = 4096;
 
-figure('Name', 'ASSR Grid Results (preset 1022)');
+figure('Name', 'ASSR Grid Results (preset 1032)');
 fprintf('Processing trials...\n');
 
 for i = 1:num_markers
@@ -47,14 +47,6 @@ for i = 1:num_markers
     end
     
     segment = eeg_signal(max(1, start_idx):min(end_idx, total_samples));
-    
-    if contains(current_label, '40')
-        target_freq = 40;
-    elseif contains(current_label, '25')
-        target_freq = 25;
-    else
-        target_freq = 40;
-    end
     
     [pxx, f] = pwelch(segment, win, noverlap, nfft, Fs);
     
