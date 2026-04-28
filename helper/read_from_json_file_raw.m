@@ -2,7 +2,7 @@ function signals = read_from_json_file_raw(filename, type)
     % READ_FROM_JSON_FILE Loads JSON time series data that was collected on
     % the developer software GDMuse. Slightly different format than data
     % collected on the final cognitive impairment screening app. Should not
-    % be used in any shipped code.
+    % be used in any shipped code. NOTE: outputs are 0-indexed
     %
     % Input:
     %   filename - string, path to .json file
