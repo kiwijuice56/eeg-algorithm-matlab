@@ -3,13 +3,13 @@ function signals = read_from_json_file_app(filename, task, type)
     %
     % Input:
     %   filename - string, path to .json file
-    %   task    - string, the prefix of the task type (no_stimulus,
-    %   assr_listening, oddball reaction) 
+    %   task     - string, the prefix of the task type (no_stimulus,
+    %   assr_listening, oddball, reaction) 
     %   type     - string, the prefix of the stream type (optics, eeg, etc.)
     %
     % Output:
-    %   signals - struct, each field is a channel (e.g., eeg0, eeg1, ...),
-    %             containing .time (nx1) and .data (nx1)
+    %   signals - struct, each field is a stream (e.g., eeg, optics),
+    %             containing .time (nx1) and .data (nxm)
 
     % Read JSON file
     text = fileread(filename);

@@ -1,4 +1,8 @@
-# Study schema
+# EEG/fNIRS MATLAB Algorithms
+A repository that implements basic EEG and fNIRS data analysis for use
+in a cognitive impairment screening mobile app.
+
+## Study schema
 The app records data using the Muse S Athena headband on preset 1042 (high power fNIRS and full EEG).
 
 Four tasks are use to stimulate brain data. 
@@ -9,6 +13,14 @@ Four tasks are use to stimulate brain data.
 | `assr_listening` | 40 Hz and 45 Hz audio listening task, high and low volume variants for each (steady state response) | 60 seconds for each audio | Because this task has changed over time, some old recordings compare different frequencies such as 80 Hz or 20 Hz |
 | `oddball` | 0.8 Hz oddball audio listening task (event related potentials) | 125 seconds (20 rare tones, 80 common tones) | |
 | `reaction` | Reaction time task (energetics) | ~60 seconds (20 measurements every 1.5 - 3.0 seconds) | |
+
+## Code base
+| Directory | Purpose | 
+| --- | --- |
+| `test/` | Small independent scripts to visualize data, usually for paper figures |
+| `helper/` | Functions used across the code-base to accomplish general tasks |
+| `features/` | Functions and scripts used to extract more advanced features from data |
+| `app_functions/` | Code that will be translated to C++ and included in the final app |
 
 ## Data format
 The data is stored in a JSON format with a key : dictionary entry for each of the four tasks. 
