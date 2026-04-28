@@ -1,7 +1,7 @@
 % ERP Analysis of Oddball Task
 Fs = 256;
 channel = 1;
-trial = "data\app_sample\preset_1032n.json";
+trial = "data\app_sample\preset_1042.json";
 
 % epoch parameters 
 pre_stim_ms  = 200;
