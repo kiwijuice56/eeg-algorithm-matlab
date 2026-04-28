@@ -1,10 +1,9 @@
 function signals = read_from_json_file_app(filename, task, type)
-    % READ_FROM_JSON_FILE Loads JSON time series data.
+    % READ_FROM_JSON_FILE Loads JSON time series data that was collected on the cognitive impairment screening app.
     %
     % Input:
     %   filename - string, path to .json file
-    %   task     - string, the prefix of the task type (no_stimulus,
-    %   assr_listening, oddball, reaction) 
+    %   task     - string, the prefix of the task type (no_stimulus, assr_listening, oddball, reaction) 
     %   type     - string, the prefix of the stream type (optics, eeg, etc.)
     %
     % Output:

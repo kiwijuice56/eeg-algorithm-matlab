@@ -1,5 +1,8 @@
 function signals = read_from_json_file_raw(filename, type)
-    % READ_FROM_JSON_FILE Loads JSON time series data.
+    % READ_FROM_JSON_FILE Loads JSON time series data that was collected on
+    % the developer software GDMuse. Slightly different format than data
+    % collected on the final cognitive impairment screening app. Should not
+    % be used in any shipped code.
     %
     % Input:
     %   filename - string, path to .json file
@@ -24,11 +27,9 @@ function signals = read_from_json_file_raw(filename, type)
             continue;
         end
 
-        % Extract and sort time/value
+        % Extract time value
         values = double(entry.value);
         t = double(entry.time);
-        % [t, idx] = sort(t);
-        % values = values(idx, :);
 
         % Store each channel
         signals.(name).time = t;
