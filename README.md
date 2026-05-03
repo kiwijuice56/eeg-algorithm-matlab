@@ -11,7 +11,7 @@ Four tasks are use to stimulate brain data.
 | --- | --- | --- | --- |
 | `no_stimulus` | No stimulus task (resting state) | 60 seconds | |
 | `assr_listening` | 40 Hz and 45 Hz audio listening task, high and low volume variants for each (steady state response) | 60 seconds for each audio | Because this task has changed over time, some old recordings compare different frequencies such as 80 Hz or 20 Hz |
-| `oddball` | 0.8 Hz oddball audio listening task (event related potentials) | 125 seconds (20 rare tones, 80 common tones) | |
+| `oddball` | Oddball audio listening task (event related potentials) | 94 seconds (25 rare tones, 100 common tones) | |
 | `reaction` | Reaction time task (energetics) | ~60 seconds (20 measurements every 1.5 - 3.0 seconds) | |
 
 ## Code base
