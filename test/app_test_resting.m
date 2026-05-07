@@ -1,6 +1,6 @@
 Fs = 256;
 channel = 1;
-trial = "data\app_sample\preset_1032n.json";
+trial = "data\pilot_young\e1e60478-bb99-4c52-b453-7e24cc163838.json";
 signals = read_from_json_file_app(trial, "no_stimulus", "eeg");
 signal = signals.eeg.data(channel, :);
 

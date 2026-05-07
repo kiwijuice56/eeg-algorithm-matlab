@@ -1,6 +1,6 @@
 Fs = 256;
-channel = 2;
-trial_file = "data\app_sample\preset_1042.json";
+channel = 1;
+trial_file = "data\app_sample\e1ccc31d-5804-41cd-a929-cf78906c9b08.json";
 % Load Data
 eeg_data       = read_from_json_file_app(trial_file, "assr_listening", "eeg");
 eeg_signal     = eeg_data.eeg.data(channel, :);
@@ -21,8 +21,10 @@ win      = hanning(2048);
 noverlap = 1024;
 nfft     = 4096;
 
-figure('Name', 'ASSR Grid Results (preset 1032)');
+figure('Name', 'Steady state audio of one user');
 fprintf('Processing trials...\n');
+
+freq_marker_drawn = false(1, 4);
 
 for i = 1:num_markers
     current_label = stim_labels{i};
@@ -34,8 +36,8 @@ for i = 1:num_markers
     % Determine grid position
     if contains(current_label, '40_hz_high'), sp_idx = 1;
     elseif contains(current_label, '40_hz_low'),  sp_idx = 3;
-    elseif contains(current_label, '25_hz_high'), sp_idx = 2;
-    elseif contains(current_label, '25_hz_low'),  sp_idx = 4;
+    elseif contains(current_label, '45_hz_high'), sp_idx = 2;
+    elseif contains(current_label, '45_hz_low'),  sp_idx = 4;
     else, continue;
     end
     
@@ -55,10 +57,18 @@ for i = 1:num_markers
     % xline(target_freq, '--r', sprintf('%d Hz', target_freq), ...
     %     'LabelVerticalAlignment', 'bottom', 'LineWidth', 1.5);
     plot(f, pow2db(pxx), 'LineWidth', 1.2);
-    
-    
-    xlim([3, 50]);
-    ylim([-10, 15]);
+
+    if ~freq_marker_drawn(sp_idx)
+        if sp_idx == 1 || sp_idx == 3
+            xline(40, ':r', 'LineWidth', 1.5);
+        else
+            xline(45, ':r', 'LineWidth', 1.5);
+        end
+        freq_marker_drawn(sp_idx) = true;
+    end
+
+    xlim([15, 50]);
+    ylim([-10, 5]);
     grid on;
     if sp_idx > 2, xlabel('Frequency (Hz)'); end
     if mod(sp_idx, 2) ~= 0, ylabel('Power/Frequency (dB/Hz)'); end

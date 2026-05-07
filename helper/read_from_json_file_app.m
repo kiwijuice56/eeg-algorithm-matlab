@@ -19,7 +19,6 @@ function signals = read_from_json_file_app(filename, task, type)
     for i = 1:numel(signalNames)
         name = signalNames{i};
         entry = data.(name);
-
         if ~startsWith(name, type)
             continue;
         end
@@ -28,7 +27,6 @@ function signals = read_from_json_file_app(filename, task, type)
             signals.(name) = entry;
             continue;
         end
-
         % Extract and sort time/value
         values = double(entry.value);
         t = double(entry.time);

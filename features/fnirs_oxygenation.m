@@ -1,3 +1,6 @@
+here = fileparts(mfilename('fullpath'));
+addpath(fullfile(here, '..', 'helper'));
+
 % Parameters
 fS = 64;               % Hz
 baseline_seconds = 20; % baseline duration for initial intensity calculation
@@ -8,7 +11,7 @@ lpf_hz = 0.2;          % band-pass upper cutoff [Hz], attenuates cardiac (~1-1.5
 epsilon = [400, 1500;  % 730 nm: [HbO, HbR], https://omlc.org/spectra/hemoglobin/moaveni.html
            1060, 800]; % 850 nm: [HbO, HbR]
 epsilon_uM = epsilon * 1e-6;
-data_path = "data/app_sample/preset_1032.json";
+data_path = "data/pilot_young/9aaadb90-9d64-44d0-8866-429b18498898.json";
 tasks = ["no_stimulus", "assr_listening", "oddball", "reaction"];
 task_titles = ["No Stimulus", "ASSR Listening", "Oddball", "Reaction"];
 
@@ -22,9 +25,9 @@ scale = d .* DPF(:); % wavelength-specific pathlength: [L730; L850]
 E = epsilon_uM .* scale;
 pinvE = pinv(E);
 
-% First pass: process each task and find maximum duration
+% First pass: process each task and find minimum duration (crop all plots to this length)
 results = struct();
-max_samples = 0;
+min_samples = inf;
 
 for i = 1:numel(tasks)
     task = tasks(i);
@@ -36,7 +39,7 @@ for i = 1:numel(tasks)
     outer_right_850 = signals.optics.data(4,:)';
 
     n_samples = length(outer_left_730);
-    max_samples = max(max_samples, n_samples);
+    min_samples = min(min_samples, n_samples);
 
     baseline_samples = round(baseline_seconds * fS);
     baseline_samples = min(max(baseline_samples, 1), n_samples);
@@ -69,21 +72,13 @@ for i = 1:numel(tasks)
     task_start_time = NaN;
     task_end_time = NaN;
     if isfield(task_data, "task_start_unix_time")
-        task_start_time = double(task_data.task_start_unix_time);
+        task_start_time = app_json_scalar(task_data.task_start_unix_time);
     end
     if isfield(task_data, "task_end_unix_time")
-        task_end_time = double(task_data.task_end_unix_time);
+        task_end_time = app_json_scalar(task_data.task_end_unix_time);
     end
 
-    stimulus_rel_sec = [];
-    if isfield(stimulus_data, "stimulus_unix_time")
-        stim_unix = double(stimulus_data.stimulus_unix_time);
-        if isfinite(task_start_time)
-            stimulus_rel_sec = stim_unix - task_start_time;
-        elseif isfinite(task_end_time)
-            stimulus_rel_sec = stim_unix - (task_end_time - (n_samples / fS));
-        end
-    end
+    stimulus_rel_sec = local_stimulus_times_sec(stimulus_data, task, task_start_time, task_end_time, n_samples, fS);
 
     results(i).HbO_left = C_left(:,1);
     results(i).HbR_left = C_left(:,2);
@@ -91,6 +86,10 @@ for i = 1:numel(tasks)
     results(i).HbR_right = C_right(:,2);
     results(i).stimulus_rel_sec = stimulus_rel_sec(:);
     results(i).n_samples = n_samples;
+end
+
+if ~isfinite(min_samples) || min_samples < 1
+    error("No valid optics length across tasks.");
 end
 
 % Plot as 2x2 components; each component has two stacked plots (left/right)
@@ -104,13 +103,11 @@ for i = 1:numel(tasks)
     top_idx = row_offset * 2 + col;
     bottom_idx = top_idx + 2;
 
-    t = (0:max_samples - 1) / fS;
-    n_samples = results(i).n_samples;
-    pad_len = max_samples - n_samples;
-    HbO_left = [results(i).HbO_left; zeros(pad_len, 1)];
-    HbR_left = [results(i).HbR_left; zeros(pad_len, 1)];
-    HbO_right = [results(i).HbO_right; zeros(pad_len, 1)];
-    HbR_right = [results(i).HbR_right; zeros(pad_len, 1)];
+    t = (0:min_samples - 1) / fS;
+    HbO_left = results(i).HbO_left(1:min_samples);
+    HbR_left = results(i).HbR_left(1:min_samples);
+    HbO_right = results(i).HbO_right(1:min_samples);
+    HbR_right = results(i).HbR_right(1:min_samples);
     stim_t = results(i).stimulus_rel_sec;
     stim_t = stim_t(stim_t >= 0 & stim_t <= t(end));
 
@@ -155,4 +152,42 @@ else
     lgd = legend([h_hbo_legend, h_hbr_legend], {'HbO_2', 'HbR'});
 end
 set(lgd, 'Units', 'normalized', 'Position', [0.40, 0.01, 0.2, 0.03], 'Orientation', 'horizontal');
+
+function stim_rel = local_stimulus_times_sec(stimulus_data, task, task_start_time, task_end_time, n_samples, fS)
+% Stimulus times relative to task start (s). For oddball, only deviant / rare tones (README: rare vs common).
+    stim_rel = [];
+    if ~isfield(stimulus_data, "stimulus_unix_time")
+        return;
+    end
+    stim_unix = app_json_row_vector(stimulus_data.stimulus_unix_time);
+    if isempty(stim_unix)
+        return;
+    end
+    if isfinite(task_start_time)
+        rel_all = stim_unix(:) - task_start_time;
+    elseif isfinite(task_end_time)
+        rel_all = stim_unix(:) - (task_end_time - n_samples / fS);
+    else
+        return;
+    end
+
+    if strcmp(task, "oddball") && isfield(stimulus_data, "stimulus_label")
+        labels = app_json_stimulus_labels(stimulus_data.stimulus_label);
+        n = min(numel(rel_all), numel(labels));
+        rel_all = rel_all(1:n);
+        labels = labels(1:n);
+        mask = false(n, 1);
+        for k = 1:n
+            mask(k) = local_is_oddball_deviant_label(labels(k));
+        end
+        stim_rel = rel_all(mask);
+    else
+        stim_rel = rel_all(:);
+    end
+end
+
+function tf = local_is_oddball_deviant_label(lbl)
+    s = lower(strtrim(char(string(lbl))));
+    tf = strcmp(s, "rare") || strcmp(s, "deviant") || strcmp(s, "oddball");
+end
 
