@@ -8,22 +8,16 @@ d = 2.8;               % source-detector distance [cm] for outer sep
 DPF = [5.5, 5.5];      % differential pathlength factors (730 nm, 850nm)
 hpf_hz = 0.01;         % band-pass lower cutoff [Hz]
 lpf_hz = 0.2;          % band-pass upper cutoff [Hz], attenuates cardiac (~1-1.5 Hz)
+apply_bandpass = false; % set false to skip band-pass on deltaOD (see fnirs_extract_hb_timeseries)
 epsilon = [400, 1500;  % 730 nm: [HbO, HbR], https://omlc.org/spectra/hemoglobin/moaveni.html
            1060, 800]; % 850 nm: [HbO, HbR]
-epsilon_uM = epsilon * 1e-6;
 data_path = "data/pilot_young/9aaadb90-9d64-44d0-8866-429b18498898.json";
 tasks = ["no_stimulus", "assr_listening", "oddball", "reaction"];
 task_titles = ["No Stimulus", "ASSR Listening", "Oddball", "Reaction"];
 
-if lpf_hz >= (fS / 2)
-    error('lpf_hz must be less than Nyquist frequency (fS/2).');
-end
-[b_bp, a_bp] = butter(3, [hpf_hz, lpf_hz] / (fS / 2), 'bandpass');
-
-% MBLL solve matrix
-scale = d .* DPF(:); % wavelength-specific pathlength: [L730; L850]
-E = epsilon_uM .* scale;
-pinvE = pinv(E);
+fnirs_opts = {'fS', fS, 'baseline_seconds', baseline_seconds, 'd', d, ...
+    'DPF', DPF, 'epsilon', epsilon, 'hpf_hz', hpf_hz, 'lpf_hz', lpf_hz, ...
+    'apply_bandpass', apply_bandpass};
 
 % First pass: process each task and find minimum duration (crop all plots to this length)
 results = struct();
@@ -31,40 +25,12 @@ min_samples = inf;
 
 for i = 1:numel(tasks)
     task = tasks(i);
-    signals = read_from_json_file_app(data_path, task, "optics");
+    hb = fnirs_extract_hb_timeseries(data_path, task, fnirs_opts{:});
+    if ~hb.ok
+        error('fNIRS extraction failed for task %s in %s', task, data_path);
+    end
 
-    outer_left_730  = signals.optics.data(1,:)';
-    outer_right_730 = signals.optics.data(2,:)';
-    outer_left_850  = signals.optics.data(3,:)';
-    outer_right_850 = signals.optics.data(4,:)';
-
-    n_samples = length(outer_left_730);
-    min_samples = min(min_samples, n_samples);
-
-    baseline_samples = round(baseline_seconds * fS);
-    baseline_samples = min(max(baseline_samples, 1), n_samples);
-
-    proc_channel = @(sig730, sig850) ...
-        ( ...
-        -log10([sig730 ./ mean(sig730(1:baseline_samples)), ...
-              sig850 ./ mean(sig850(1:baseline_samples))]) ...
-        );
-
-    OD_left  = proc_channel(outer_left_730,  outer_left_850);
-    OD_right = proc_channel(outer_right_730, outer_right_850);
-
-    deltaOD_left = OD_left - mean(OD_left(1:baseline_samples, :), 1);
-    deltaOD_right = OD_right - mean(OD_right(1:baseline_samples, :), 1);
-
-    % Standard fNIRS denoising step: band-pass filtering to suppress heartbeat and slow drift.
-    % Sources:
-    % - https://www.mdpi.com/1999-4893/11/5/67
-    % - https://pmc.ncbi.nlm.nih.gov/articles/PMC6336925/
-    deltaOD_left = filtfilt(b_bp, a_bp, deltaOD_left);
-    deltaOD_right = filtfilt(b_bp, a_bp, deltaOD_right);
-
-    C_left  = (pinvE * deltaOD_left')';   % delta[HbO, HbR] for left outer
-    C_right = (pinvE * deltaOD_right')';  % delta[HbO, HbR] for right outer
+    min_samples = min(min_samples, hb.n_samples);
 
     task_data = read_from_json_file_app(data_path, task, "task");
     stimulus_data = read_from_json_file_app(data_path, task, "stimulus");
@@ -78,14 +44,14 @@ for i = 1:numel(tasks)
         task_end_time = app_json_scalar(task_data.task_end_unix_time);
     end
 
-    stimulus_rel_sec = local_stimulus_times_sec(stimulus_data, task, task_start_time, task_end_time, n_samples, fS);
+    stimulus_rel_sec = local_stimulus_times_sec(stimulus_data, task, task_start_time, task_end_time, hb.n_samples, fS);
 
-    results(i).HbO_left = C_left(:,1);
-    results(i).HbR_left = C_left(:,2);
-    results(i).HbO_right = C_right(:,1);
-    results(i).HbR_right = C_right(:,2);
+    results(i).HbO_left = hb.HbO_left;
+    results(i).HbR_left = hb.HbR_left;
+    results(i).HbO_right = hb.HbO_right;
+    results(i).HbR_right = hb.HbR_right;
     results(i).stimulus_rel_sec = stimulus_rel_sec(:);
-    results(i).n_samples = n_samples;
+    results(i).n_samples = hb.n_samples;
 end
 
 if ~isfinite(min_samples) || min_samples < 1

@@ -6,7 +6,7 @@ here = fileparts(mfilename("fullpath"));
 addpath(fullfile(here, "..", "helper"));
 
 %% Class folders (raw JSON files per class)
-class_one_folder = "data/pilot_young";
+class_one_folder = "data/pilot_young_combined";
 class_two_folder = "data/pilot_old_healthy";
 class_three_folder = "data/pilot_old_unhealthy";
 

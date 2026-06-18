@@ -10,8 +10,8 @@ here = fileparts(mfilename("fullpath"));
 addpath(fullfile(here, "..", "helper"));
 
 %% One class: folder of raw JSON files + plot title label
-class_folder = "data/pilot_young";
-class_display_name = "Healthy young users";
+class_folder = "data/pilot_young_2";
+class_display_name = "Healthy young users (new data only)";
 
 %% Epoch / channel parameters (match test/app_test_oddball_erp.m)
 Fs = 256;

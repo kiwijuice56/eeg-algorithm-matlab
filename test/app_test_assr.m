@@ -1,6 +1,6 @@
 Fs = 256;
 channel = 1;
-trial_file = "data\app_sample\e1ccc31d-5804-41cd-a929-cf78906c9b08.json";
+trial_file = "data\pilot_young_2\9c5d0ba5-0cd5-42b1-8cb5-98a14093ac93.json";
 % Load Data
 eeg_data       = read_from_json_file_app(trial_file, "assr_listening", "eeg");
 eeg_signal     = eeg_data.eeg.data(channel, :);

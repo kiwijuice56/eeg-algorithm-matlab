@@ -1,6 +1,6 @@
 Fs = 256;
 channel = 1;
-trial = "data\pilot_young\e1e60478-bb99-4c52-b453-7e24cc163838.json";
+trial = "data\pilot_young_2\cc3e4b32-2aef-48b3-9cf6-5f3f65eb010b.json";
 signals = read_from_json_file_app(trial, "no_stimulus", "eeg");
 signal = signals.eeg.data(channel, :);
 
@@ -32,4 +32,4 @@ ylim([-10, 15]);
 grid on; legend;
 xlabel('Frequency (Hz)');
 ylabel('Power/Frequency (dB/Hz)');
-title('Resting state PSD (Preset 1032)');
+title('Resting state PSD (Healthy young, left ear)');
